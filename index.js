@@ -1,10 +1,16 @@
 const express = require('express')
 const dontenv = require('dotenv')
+const cors = require("cors")
 const { MongoClient, ServerApiVersion } = require('mongodb');
-const app = express()
+
 dontenv.config()
 
-const PORT = process.env.PORT
+const app = express()
+
+app.use(cors())
+app.use(express.json())
+
+const PORT = process.env.PORT || 5000;
 const uri = process.env.MONGODB_URI
 
 
@@ -22,13 +28,26 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
+    //adding to databashe with server
     await client.connect();
+    const db = client.db('mediqueue')
+    const addTutorCollection = db.collection('addtutors')
+
+
+   app.post('/tutor',async (req, res) =>{
+      const  addtutorData = req.body
+      console.log(addtutorData)
+      const result = await  addTutorCollection.insertOne(addtutorData)
+      res.json(result)
+      
+   })
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
