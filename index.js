@@ -1,7 +1,7 @@
 const express = require('express')
 const dontenv = require('dotenv')
 const cors = require("cors")
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 dontenv.config()
 
@@ -33,13 +33,29 @@ async function run() {
     const db = client.db('mediqueue')
     const addTutorCollection = db.collection('addtutors')
 
+   //get data  to the front end
+   app.get('/tutor', async (req,res)=>{
+    const result = await addTutorCollection.find().toArray()
+    res.json(result)
+   })
 
+   
+   // send to database
    app.post('/tutor',async (req, res) =>{
       const  addtutorData = req.body
       console.log(addtutorData)
       const result = await  addTutorCollection.insertOne(addtutorData)
-      res.json(result)
-      
+      res.json(result) 
+   })
+
+
+
+
+   //data collect in details page 
+   app.get("/homepagetutor/:id",  async(req, res)=>{
+    const {id} = req.params
+    const result = await addTutorCollection.findOne({_id: new ObjectId(id)})
+    res.json(result)
    })
 
     // Send a ping to confirm a successful connection
