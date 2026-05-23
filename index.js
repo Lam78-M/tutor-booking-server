@@ -7,7 +7,7 @@ dontenv.config()
 
 const app = express()
 
-app.use(cors())
+app.use(cors())      
 app.use(express.json())
 
 const PORT = process.env.PORT || 5000;
@@ -27,29 +27,34 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
     //adding to databashe with server
     await client.connect();
     const db = client.db('mediqueue')
     const addTutorCollection = db.collection('addtutors')
+    const addTutorAllCollection = db.collection('tutorall')
+    
+//tyt dto dkiakdefjie iofehf
 
+app.get('/tutor', async (req,res)=>{
+ const result = await addTutorAllCollection.find().toArray();
+ res.send(result)
+})
+
+  //  -------------------------------
    //get data  to the front end
-   app.get('/tutor', async (req,res)=>{
+   app.get('/add-tutor', async (req,res)=>{
     const result = await addTutorCollection.find().toArray()
     res.json(result)
    })
 
    
    // send to database
-   app.post('/tutor',async (req, res) =>{
+   app.post('/add-tutor',async (req, res) =>{
       const  addtutorData = req.body
       console.log(addtutorData)
       const result = await  addTutorCollection.insertOne(addtutorData)
       res.json(result) 
    })
-
-
-
 
    //data collect in details page 
    app.get("/homepagetutor/:id",  async(req, res)=>{
