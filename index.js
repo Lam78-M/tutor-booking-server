@@ -47,7 +47,7 @@ app.get('/tutor', async (req,res)=>{
     res.json(result)
    })
 
-   
+     
    // send to database
    app.post('/add-tutor',async (req, res) =>{
       const  addtutorData = req.body
@@ -61,6 +61,25 @@ app.get('/tutor', async (req,res)=>{
     const {id} = req.params
     const result = await addTutorCollection.findOne({_id: new ObjectId(id)})
     res.json(result)
+   })
+
+   //patch api for only spcific edit
+
+   app.patch("/add-tutor/:id", async(req, res)=>{
+    const {id} = req.params
+    const updatedData = req.body
+    const result = await addTutorCollection.updateOne(
+      {_id: new ObjectId(id)},
+      {$set: updatedData}
+    )
+    res.json(result)
+   })
+   //--------delete
+
+   app.delete("/add-tutor/:id", async(req, res)=>{
+     const {id} = req.params;
+     const result = await  addTutorCollection.deleteOne({_id: new ObjectId(id)})
+     res.json(result)
    })
 
     // Send a ping to confirm a successful connection
