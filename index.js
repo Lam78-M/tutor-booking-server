@@ -35,22 +35,43 @@ async function run() {
     const bookingCollection = db.collection("bookings")
 
     //booking settings
+
 app.post("/bookings", async (req, res) => {
   try {
     const booking = req.body;
 
+    // 1. আগে slot কমাও (IMPORTANT PART)
+    const tutorUpdate = await addTutorAllCollection.updateOne(
+      {
+        _id: new ObjectId(booking.tutorId),
+        availableSlots: { $gt: 0 },
+      },
+      {
+        $inc: { availableSlots: -1 },
+      }
+    );
+
+    // 2. যদি slot না থাকে → stop
+    if (tutorUpdate.modifiedCount === 0) {
+      return res.json({ 
+        success: false,
+        message: "No slots available",
+      });
+    }
+
+    // 3. তারপর booking save করো
     const result = await bookingCollection.insertOne(booking);
 
+    // 4. response পাঠাও
     res.json({
       success: true,
       insertedId: result.insertedId,
     });
+
   } catch (error) {
     res.status(500).json({ success: false, error });
   }
 });
-    
-
 //book get method
 app.get("/bookings", async (req, res) => {
   try {
@@ -175,7 +196,6 @@ run().catch(console.dir);
 app.get('/',(req, res) =>{
     res.send("SERVER IS RUNNING VERY WELLY")
 })
-
 app.listen(PORT, ()=>{
     console.log(`Server is running on port ${PORT}`)
 })
