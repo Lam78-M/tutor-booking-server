@@ -2,6 +2,7 @@ const express = require('express')
 const dontenv = require('dotenv')
 const cors = require("cors")
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const { createRemoteJWKSet, jwtVerify } = require('jose-cjs');
 
 dontenv.config()
 
@@ -25,6 +26,39 @@ const client = new MongoClient(uri, {
   }
 });
 
+const JWKS =  createRemoteJWKSet(
+  new URL("http://localhost:3000/api/auth/jwks")
+)
+
+const verifyToken = async (req, res, next)=>{
+  const authHeader = req?.headers.authorization;
+  if(!authHeader){
+    return res.status(401).json({
+      message: "Unauthorized"
+    })
+  }
+const token = authHeader.split(" ")[1]
+if(!token){
+   return res.status(401).json({
+      message: "Unauthorized"
+    })
+}
+console.log(token)
+
+try{
+  const {payload} = await jwtVerify(token, JWKS ) 
+  console.log(payload) 
+  next()
+}
+catch(error){
+  return res.status(403).json({
+    message: "Forbidden"
+  })
+}
+
+
+}
+
 async function run() {
   try {
     //adding to databashe with server
@@ -36,7 +70,7 @@ async function run() {
 
     //booking settings
 
-app.post("/bookings", async (req, res) => {
+app.post("/bookings", verifyToken, async (req, res) => {
   try {
     const booking = req.body;
 
@@ -73,7 +107,7 @@ app.post("/bookings", async (req, res) => {
   }
 });
 //book get method
-app.get("/bookings", async (req, res) => {
+app.get("/bookings", verifyToken, async (req, res) => {
   try {
     const result = await bookingCollection.find().toArray();
     res.json(result);
@@ -99,8 +133,8 @@ app.get('/tutor', async (req, res) => {
   // Date Filter
   if (startDate && endDate) {
     query.sessionStart = {
-      $gte: startDate,
-      $lte: endDate,
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
     };
   }
 
@@ -114,7 +148,7 @@ app.get('/tutor', async (req, res) => {
 
 // 00000000000000000000000000000000000
 
-app.get("/tutor/:id", async (req, res) => {
+app.get("/tutor/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -140,22 +174,25 @@ app.get("/tutor/:id", async (req, res) => {
 
   //  -------------------------------
    //get data  to the front end
-   app.get('/add-tutor', async (req,res)=>{
+   app.get('/add-tutor', verifyToken, async (req,res)=>{
     const result = await addTutorCollection.find().toArray()
     res.json(result)
    })
 
      
    // send to database
-   app.post('/add-tutor',async (req, res) =>{
-      const  addtutorData = req.body
-      console.log(addtutorData)
+   app.post('/add-tutor', verifyToken,async (req, res) =>{
+      const  addtutorData = {
+    ...req.body,
+    sessionStart: new Date(req.body.sessionStart),
+  };
+  
       const result = await  addTutorCollection.insertOne(addtutorData)
       res.json(result) 
    })
 
    //data collect in details page 
-   app.get("/homepagetutor/:id",  async(req, res)=>{
+   app.get("/homepagetutor/:id", verifyToken,  async(req, res)=>{
     const {id} = req.params
     const result = await addTutorCollection.findOne({_id: new ObjectId(id)})
     res.json(result)
@@ -196,6 +233,7 @@ run().catch(console.dir);
 app.get('/',(req, res) =>{
     res.send("SERVER IS RUNNING VERY WELLY")
 })
+
 app.listen(PORT, ()=>{
     console.log(`Server is running on port ${PORT}`)
 })
