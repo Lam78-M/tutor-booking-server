@@ -171,7 +171,7 @@ app.get("/tutor/:id", verifyToken, async (req, res) => {
 
   //  -------------------------------
    //get data  to the front end
-   app.get('/add-tutor', verifyToken, async (req,res)=>{
+   app.get('/add-tutor',  async (req,res)=>{
     const result = await addTutorCollection.find().toArray()
     res.json(result)
    })
