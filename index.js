@@ -26,9 +26,7 @@ const client = new MongoClient(uri, {
   }
 });
 
-const JWKS =  createRemoteJWKSet(
-  new URL("http://localhost:3000/api/auth/jwks")
-)
+const JWKS =  createRemoteJWKSet( new URL(`${process.env.CLIENT_URL}/api/auth/jwks`))
 
 const verifyToken = async (req, res, next)=>{
   const authHeader = req?.headers.authorization;
@@ -62,7 +60,7 @@ catch(error){
 async function run() {
   try {
     //adding to databashe with server
-    await client.connect();
+    // await client.connect();
     const db = client.db('mediqueue')
     const addTutorCollection = db.collection('addtutors')
     const addTutorAllCollection = db.collection('tutorall')
@@ -146,7 +144,6 @@ app.get('/tutor', async (req, res) => {
 
 // 00000000000000000000000000000000000000000000
 
-// 00000000000000000000000000000000000
 
 app.get("/tutor/:id", verifyToken, async (req, res) => {
   try {
@@ -220,7 +217,7 @@ app.get("/tutor/:id", verifyToken, async (req, res) => {
    
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
