@@ -197,7 +197,7 @@ app.get("/tutor/:id", verifyToken, async (req, res) => {
 
    //patch api for only spcific edit
 
-   app.patch("/add-tutor/:id", async(req, res)=>{
+   app.patch("/add-tutor/:id",  async(req, res)=>{
     const {id} = req.params
     const updatedData = req.body
     const result = await addTutorCollection.updateOne(
