@@ -26,6 +26,9 @@ const client = new MongoClient(uri, {
   }
 });
 
+
+//here is our jwt token implimentation
+
 const JWKS =  createRemoteJWKSet( new URL(`${process.env.CLIENT_URL}/api/auth/jwks`))
 
 const verifyToken = async (req, res, next)=>{
@@ -56,11 +59,11 @@ catch(error){
 
 
 }
+ //adding to databashe with server
+    // await client.connect();
 
 async function run() {
   try {
-    //adding to databashe with server
-    // await client.connect();
     const db = client.db('mediqueue')
     const addTutorCollection = db.collection('addtutors')
     const addTutorAllCollection = db.collection('tutorall')
@@ -72,7 +75,7 @@ app.post("/bookings", verifyToken, async (req, res) => {
   try {
     const booking = req.body;
 
-    // 1. আগে slot কমাও (IMPORTANT PART)
+    // slot reducing here
     const tutorUpdate = await addTutorAllCollection.updateOne(
       {
         _id: new ObjectId(booking.tutorId),
@@ -83,7 +86,6 @@ app.post("/bookings", verifyToken, async (req, res) => {
       }
     );
 
-    // 2. যদি slot না থাকে → stop
     if (tutorUpdate.modifiedCount === 0) {
       return res.json({ 
         success: false,
@@ -91,10 +93,9 @@ app.post("/bookings", verifyToken, async (req, res) => {
       });
     }
 
-    // 3. তারপর booking save করো
     const result = await bookingCollection.insertOne(booking);
 
-    // 4. response পাঠাও
+    // 4. response sending
     res.json({
       success: true,
       insertedId: result.insertedId,
@@ -113,36 +114,33 @@ app.get("/bookings", verifyToken, async (req, res) => {
     res.status(500).json({ success: false, error });
   }
 });
-//tyt dto dkiakdefjie iofehf
+//   ------- ----------- -breakage
 
 app.get('/tutor', async (req, res) => {
   const { search = "", startDate, endDate } = req.query;
 
   let query = {};
 
-  // Name Search (case insensitive)
   if (search) {
-    query.tutorName = {
-      $regex: search,
-      $options: "i",
-    };
+    query.tutorName = { $regex: search, $options: "i" };
   }
 
-  // Date Filter
-  if (startDate && endDate) {
-    query.sessionStart = {
-      $gte: new Date(startDate),
-      $lte: new Date(endDate),
-    };
+
+  if (startDate || endDate) {
+    query.sessionStart = {};
+    if (startDate) {
+      query.sessionStart.$gte = startDate; 
+    }
+    if (endDate) {
+      query.sessionStart.$lte = endDate; 
+    }
   }
 
   const result = await addTutorAllCollection.find(query).toArray();
-
   res.send(result);
 });
 
-
-// 00000000000000000000000000000000000000000000
+// tutor id verifying and tutor get post
 
 
 app.get("/tutor/:id", verifyToken, async (req, res) => {
