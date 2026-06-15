@@ -176,15 +176,35 @@ app.get("/tutor/:id", verifyToken, async (req, res) => {
 
      
    // send to database
-   app.post('/add-tutor', verifyToken,async (req, res) =>{
-      const  addtutorData = {
-    ...req.body,
-    sessionStart: new Date(req.body.sessionStart),
-  };
-  
-      const result = await  addTutorCollection.insertOne(addtutorData)
-      res.json(result) 
-   })
+app.post('/add-tutor', verifyToken, async (req, res) => {
+  try {
+    const body = req.body;
+
+    const addtutorData = {
+      ...body,
+      hourlyFee: Number(body.hourlyFee), 
+      totalSlot: Number(body.totalSlot), 
+      sessionStart: new Date(body.sessionStart), 
+    };
+
+    const result = await addTutorCollection.insertOne(addtutorData);
+    if (result.acknowledged) {
+      return res.status(200).json({ 
+        success: true, 
+        message: "Successfully Added", 
+        insertedId: result.insertedId 
+      });
+    } else {
+      return res.status(400).json({ success: false, message: "Failed to insert tutor data" });
+    }
+
+  } catch (error) {
+    console.error("Backend Error:", error);
+
+    return res.status(500).json({ message: error.message || "Internal Server Error" });
+  }
+});
+
 
    //data collect in details page 
    app.get("/homepagetutor/:id", verifyToken,  async(req, res)=>{
