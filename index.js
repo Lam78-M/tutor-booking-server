@@ -215,15 +215,37 @@ app.post('/add-tutor', verifyToken, async (req, res) => {
 
    //patch api for only spcific edit
 
-   app.patch("/add-tutor/:id",  async(req, res)=>{
-    const {id} = req.params
-    const updatedData = req.body
+   // patch api for only specific edit (টোকেন ভেরিফিকেশন সহ)
+app.patch("/add-tutor/:id", verifyToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+
+    // 🌟 ডাটা টাইপগুলোকে সঠিক ফরম্যাটে কনভার্ট করা হচ্ছে (যেমনটা POST-এ করা হয়েছিল)
+    const updatedData = {
+      ...body,
+      hourlyFee: body.hourlyFee ? Number(body.hourlyFee) : undefined, 
+      totalSlot: body.totalSlot ? Number(body.totalSlot) : undefined, 
+      sessionStart: body.sessionStart ? new Date(body.sessionStart) : undefined, 
+    };
+
+    // ফাকা বা undefined প্রোপার্টিগুলো ডাটাবেজে পুশ হওয়া আটকানোর জন্য ক্লিন করা হচ্ছে
+    Object.keys(updatedData).forEach(
+      (key) => updatedData[key] === undefined && delete updatedData[key]
+    );
+
+    // ডাটাবেজ কালেকশনে আপডেট করা হচ্ছে
     const result = await addTutorCollection.updateOne(
-      {_id: new ObjectId(id)},
-      {$set: updatedData}
-    )
-    res.json(result)
-   })
+      { _id: new ObjectId(id) },
+      { $set: updatedData }
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error("Backend Patch Error:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+  }
+});
    //--------delete
 
    app.delete("/add-tutor/:id", async(req, res)=>{
