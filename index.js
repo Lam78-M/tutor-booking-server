@@ -15,9 +15,6 @@ const PORT = process.env.PORT || 5000;
 const uri = process.env.MONGODB_URI
    
 
-// name:mediqueuebookstore
-// password: T9kuS5vBBa1UH2IAno
-
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -215,13 +212,11 @@ app.post('/add-tutor', verifyToken, async (req, res) => {
 
    //patch api for only spcific edit
 
-   // patch api for only specific edit (টোকেন ভেরিফিকেশন সহ)
 app.patch("/add-tutor/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const body = req.body;
 
-    // 🌟 ডাটা টাইপগুলোকে সঠিক ফরম্যাটে কনভার্ট করা হচ্ছে (যেমনটা POST-এ করা হয়েছিল)
     const updatedData = {
       ...body,
       hourlyFee: body.hourlyFee ? Number(body.hourlyFee) : undefined, 
@@ -229,12 +224,12 @@ app.patch("/add-tutor/:id", verifyToken, async (req, res) => {
       sessionStart: body.sessionStart ? new Date(body.sessionStart) : undefined, 
     };
 
-    // ফাকা বা undefined প্রোপার্টিগুলো ডাটাবেজে পুশ হওয়া আটকানোর জন্য ক্লিন করা হচ্ছে
+  
     Object.keys(updatedData).forEach(
       (key) => updatedData[key] === undefined && delete updatedData[key]
     );
 
-    // ডাটাবেজ কালেকশনে আপডেট করা হচ্ছে
+  
     const result = await addTutorCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updatedData }
@@ -255,7 +250,6 @@ app.patch("/add-tutor/:id", verifyToken, async (req, res) => {
    })
 
    
-
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
